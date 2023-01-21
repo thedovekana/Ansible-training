@@ -1,0 +1,97 @@
+---
+- name: Deploy Centreon Engine
+  hosts: node1
+  become: true
+  tasks:
+    - name: Install the Software Collections repository
+      yum:
+        name: centos-release-scl
+        state: present
+        update_cache: yes
+
+    - name: install the remi repository
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - yum-utils
+        - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        - https://rpms.remirepo.net/enterprise/remi-release-7.rpm
+
+    - name: enable yum-config-manager
+      command: yum-config-manager --enable remi-php81
+   
+    - name: Add mariadb repository
+      shell: curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | sudo bash -s -- --os-type=rhel --os-version=7 --mariadb-server-version="mariadb-10.5"
+   
+    - name: Install the Centreon repository 
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - https://yum.centreon.com/standard/22.10/el7/stable/noarch/RPMS/centreon-release-22.10-1.el7.centos.noarch.rpm
+        - centreon
+
+    - name: restart mariadb 
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: mariadb
+
+    - name: set Server name
+      command: hostnamectl set-hostname centreon
+
+    - name: Set the PHP time zone
+      command: echo "date.timezone = Africa/Abidjan" >> /etc/php.d/50-centreon.ini
+
+    - name: Timezone configuration in php.ini file
+      lineinfile:
+      path: /etc/php.ini
+      regexp: '^;date.timezone = '
+      line: 'date.timezone = Africa/Abidjan'
+      state: present
+
+    - name: restart the PHP-FPM service
+      systemd:
+        name: php-fpm
+        state: restarted
+
+    - name: Services startup during system bootup
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - php-fpm
+        - httpd24-httpd
+        - centreon
+        - cbd
+        - centengine
+        - gorgoned
+        - snmptrapd
+        - centreontrapd
+        - snmpd
+
+    - name: mariadb restart & enable
+      systemd:
+        name: mariadb
+        state: restarted
+        enabled: yes
+    - name: copy the script to the remote node
+      copy:
+        src: /tmp/mysql_secure.sh
+        dest: /tmp/
+        remote_src: yes
+        mode: 777
+
+    - name: run secure_mysql script
+      command: sh /tmp/mysql_secure.sh
+
+    - name: start apache server
+      systemd:
+        name: "{{ item }}" 
+        state: started
+      with_items:
+        - mariadb
+        - httpd24-httpd
+        

@@ -77,6 +77,12 @@
         name: mariadb
         state: restarted
         enabled: yes
+
+    - name: install expect tool
+      yum:
+        name: expect
+        state: present
+
     - name: copy the script to the remote node
       copy:
         src: /tmp/mysql_secure.sh

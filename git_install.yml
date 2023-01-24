@@ -1,0 +1,38 @@
+- name: git install & configuration playbook
+  hosts: all
+  become: true
+  tasks:
+    - name: Install git, tree & vim
+      yum:
+        name:
+          - git
+          - vim
+          - tree
+        state: present
+
+    - name: ensure that git is installed
+      command: git --version
+
+    - name: git name configuration
+      git_config:
+        name: user.name
+        scope: global
+        value: 'Koni Armand'
+
+    - name: git email configuration
+      git_config:
+        name: user.email
+        scope: global
+        value: 'narcissekana90@gmail.com'
+
+    - name: git editor configuration
+      git_config:
+        name: core.editor
+        scope: global
+        value: vim
+        
+    - name: git color configuration
+      git_config:
+        name: color.ui
+        value: auto
+        scope: global

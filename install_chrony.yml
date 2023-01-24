@@ -1,0 +1,16 @@
+---
+- name: chrony install playbook
+  hosts: all
+  become: true
+  tasks:
+    - name: install chrony
+      yum:
+        name: chrony
+        state: present
+
+
+    - name: ensure chrony is running
+      service:
+        name: chronyd
+        state: started
+        enabled: yes        

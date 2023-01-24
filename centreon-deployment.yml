@@ -46,10 +46,10 @@
 
     - name: Timezone configuration in php.ini file
       lineinfile:
-      path: /etc/php.ini
-      regexp: '^;date.timezone = '
-      line: 'date.timezone = Africa/Abidjan'
-      state: present
+        path: /etc/php.ini
+        regexp: '^;date.timezone = '
+        line: 'date.timezone = Africa/Abidjan'
+        state: present
 
     - name: restart the PHP-FPM service
       systemd:
@@ -77,6 +77,12 @@
         name: mariadb
         state: restarted
         enabled: yes
+
+    - name: install expect tool
+      yum:
+        name: expect
+        state: present
+
     - name: copy the script to the remote node
       copy:
         src: /tmp/mysql_secure.sh

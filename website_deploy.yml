@@ -1,0 +1,45 @@
+- name: Deploy a website
+  hosts: your ansible_node
+  become: yes
+  vars:
+    site_url: your template url
+  tasks:
+    - name: Install the required packages
+      package:
+          name:
+            - wget
+            - unzip
+            - httpd
+          state: latest
+          update_cache: true
+
+    - name: Starting apache service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Remove all contents in /tmp directory
+      shell: rm -rf /tmp/*
+
+    - name: Create a temporary directory
+      file:
+        path: /tmp/website
+        state: directory
+
+    - name: Download the website template
+      get_url:
+        url: "{{ site_url }}"
+        dest: /tmp/website
+
+    - name: Remove the default files in apache directory
+      shell: rm -rf /var/www/html/*
+
+    - name: Unzip the template and copy the website files in apache directory
+      shell: cd /tmp/website && unzip 2137_barista_cafe.zip && cp -r 2137_barista_cafe/* /var/www/html/
+        
+    - name: Restart apache service
+      service:
+        name: httpd
+        state: restarted
+
